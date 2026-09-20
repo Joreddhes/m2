@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Видео' if media_type == 'video' else 'Фото' }} — MediaHub{% endblock %}
+{% block content %}
+<div class="page-heading">
+  <div><p class="eyebrow">Каталог</p><h1>{{ 'Видео' if media_type == 'video' else 'Фото' }}</h1></div>
+  {% if current_user.is_authenticated %}<a class="button" href="{{ url_for('admin.new_content') }}">Добавить контент</a>{% endif %}
+</div>
+<form class="searchbar" method="get">
+  <input type="search" name="q" value="{{ query_text }}" placeholder="Название, категория или тег">
+  <select name="category"><option value="">Все категории</option>{% for value in categories %}<option {{ 'selected' if value == selected_category }}>{{ value }}</option>{% endfor %}</select>
+  <select name="source"><option value="">Все источники</option>{% for source in sources %}<option value="{{ source.id }}" {{ 'selected' if source.id == selected_source }}>{{ source.name }}</option>{% endfor %}</select>
+  <button class="button primary">Найти</button>
+</form>
+<div class="card-grid">
+{% for item in objects %}
+  <a class="media-card" href="{{ url_for('catalog.content', object_id=item.id) }}">
+    <div class="poster">{% if item.cover %}<img src="{{ url_for('media.thumbnail', file_id=item.cover.id) }}" alt="">{% else %}<span>{{ '▶' if media_type == 'video' else '▧' }}</span>{% endif %}</div>
+    <strong>{{ item.title }}</strong>
+    <small>{{ item.category or item.source.name }}</small>
+    {% if item.tags %}<span class="tags">{% for tag in item.tags[:3] %}<i>{{ tag }}</i>{% endfor %}</span>{% endif %}
+  </a>
+{% else %}
+  <div class="empty"><h2>Ничего не найдено</h2><p>Измените параметры поиска или добавьте контент.</p></div>
+{% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,12 @@
+services:
+  mediahub:
+    build: .
+    container_name: mediahub
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/app/instance
+      - ./media:/media
+    environment:
+      MEDIAHUB_SECRET_KEY: ${MEDIAHUB_SECRET_KEY:-}

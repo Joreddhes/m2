@@ -1,0 +1,2 @@
+{% extends "base.html" %}{% block title %}Вход — MediaHub{% endblock %}
+{% block content %}<div class="auth-card"><h1>Вход администратора</h1><form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><label>Пароль<input type="password" name="password" required autofocus></label><button class="button primary">Войти</button></form></div>{% endblock %}

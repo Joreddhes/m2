@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mediahub-home"
+version = "0.1.0"
+description = "Домашнее файловое медиахранилище"
+requires-python = ">=3.11"
+dependencies = [
+  "Flask>=3.1,<4",
+  "Flask-Login>=0.6.3,<1",
+  "Flask-SQLAlchemy>=3.1,<4",
+  "Flask-WTF>=1.2,<2",
+  "cryptography>=44,<46",
+  "Pillow>=11,<12",
+  "pillow-heif>=0.22,<2",
+  "waitress>=3,<4",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<9", "pytest-cov>=6,<7"]
+
+[project.scripts]
+mediahub = "mediahub.cli:main"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.package-data]
+mediahub = ["templates/**/*.html", "static/**/*"]
+
+[tool.setuptools.packages.find]
+include = ["mediahub*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>{% block title %}MediaHub{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('catalog.home') }}">MediaHub</a>
+    <nav>
+      <a href="{{ url_for('catalog.library', media_type='video') }}">Видео</a>
+      <a href="{{ url_for('catalog.library', media_type='photo') }}">Фото</a>
+      {% if current_user.is_authenticated %}
+        <a href="{{ url_for('admin.dashboard') }}">Управление</a>
+        <form method="post" action="{{ url_for('auth.logout') }}" class="inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="link-button">Выйти</button>
+        </form>
+      {% else %}
+        <a href="{{ url_for('auth.login') }}">Войти</a>
+      {% endif %}
+    </nav>
+  </header>
+  <main class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}<div class="alert {{ category }}">{{ message }}</div>{% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+  <script src="{{ url_for('static', filename='app.js', v='5') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

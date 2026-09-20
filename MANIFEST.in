@@ -1,0 +1,3 @@
+recursive-include mediahub/templates *.html
+recursive-include mediahub/static *.css *.js
+

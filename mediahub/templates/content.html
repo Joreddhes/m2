@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}{{ item.title }} — MediaHub{% endblock %}
+{% block content %}
+<nav class="breadcrumbs"><a href="{{ url_for('catalog.library', media_type=item.media_type) }}">{{ 'Видео' if item.media_type == 'video' else 'Фото' }}</a><span>›</span>{{ item.title }}</nav>
+<div class="page-heading">
+  <div><p class="eyebrow">{{ item.category or item.source.name }}</p><h1>{{ item.title }}</h1>{% if item.tags %}<div class="tags">{% for tag in item.tags %}<i>{{ tag }}</i>{% endfor %}</div>{% endif %}</div>
+  {% if current_user.is_authenticated %}<a class="button" href="{{ url_for('admin.edit_content', object_id=item.id) }}">Редактировать</a>{% endif %}
+</div>
+{% for folder, files in grouped.items() %}
+<section class="folder-section">
+  <h2>{{ folder }}</h2>
+  {% if item.media_type == 'video' %}
+    <div class="episode-list">
+    {% for file in files %}<a href="{{ url_for('media.play', file_id=file.id) }}"><span class="play-dot">▶</span><span><strong>{{ file.name }}</strong><small>{{ (file.size / 1048576)|round(1) }} МБ</small></span></a>{% endfor %}
+    </div>
+  {% else %}
+    <div class="photo-grid">
+    {% for file in files %}<a href="{{ url_for('media.original', file_id=file.id) }}" target="_blank"><img loading="lazy" src="{{ url_for('media.thumbnail', file_id=file.id) }}" alt="{{ file.name }}"><span>{{ file.name }}</span></a>{% endfor %}
+    </div>
+  {% endif %}
+</section>
+{% else %}<div class="empty"><h2>Объект пока пуст</h2></div>{% endfor %}
+{% endblock %}

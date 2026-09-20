@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}MediaHub — домашняя медиатека{% endblock %}
+{% block content %}
+<section class="hero">
+  <p class="eyebrow">Домашняя медиатека</p>
+  <h1>Что будем смотреть?</h1>
+  <p>Фото и видео со всех домашних хранилищ в одном месте.</p>
+</section>
+<section class="type-grid">
+  <a class="type-card video" href="{{ url_for('catalog.library', media_type='video') }}">
+    <span class="type-icon">▶</span><span><strong>Видео</strong><small>{{ counts.get('video', 0) }} объектов</small></span>
+  </a>
+  <a class="type-card photo" href="{{ url_for('catalog.library', media_type='photo') }}">
+    <span class="type-icon">▧</span><span><strong>Фото</strong><small>{{ counts.get('photo', 0) }} альбомов</small></span>
+  </a>
+</section>
+{% if recent %}
+<section><div class="section-title"><h2>Недавно обновлённые</h2></div>
+  <div class="card-grid">
+  {% for item in recent %}
+    <a class="media-card" href="{{ url_for('catalog.content', object_id=item.id) }}">
+      <div class="poster">{% if item.cover %}<img src="{{ url_for('media.thumbnail', file_id=item.cover.id) }}" alt="">{% else %}<span>{{ '▶' if item.media_type == 'video' else '▧' }}</span>{% endif %}</div>
+      <strong>{{ item.title }}</strong><small>{{ item.category or item.source.name }}</small>
+    </a>
+  {% endfor %}
+  </div>
+</section>
+{% endif %}
+{% endblock %}

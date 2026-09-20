@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}{{ media.name }} — {{ item.title }}{% endblock %}
+{% block content %}
+<nav class="breadcrumbs"><a href="{{ url_for('catalog.library', media_type='video') }}">Видео</a><span>›</span><a href="{{ url_for('catalog.content', object_id=item.id) }}">{{ item.title }}</a><span>›</span>{{ media.name }}</nav>
+<div class="player-layout">
+  <section>
+    <div class="video-shell" id="player-shell" data-file-id="{{ media.id }}">
+      <video id="video-player" controls playsinline preload="metadata"></video>
+      <div id="prepare-state" class="prepare-state"><div class="spinner"></div><strong>Подготавливаем видео</strong><span>Запуск обработки…</span><progress max="100" value="0"></progress></div>
+    </div>
+    <div class="player-toolbar"><label id="bitmap-control" hidden>Графические субтитры <select id="bitmap-track"></select></label><label id="audio-control" hidden>Аудио <select id="audio-track"></select></label><label>Скорость <select id="playback-rate"><option>0.5</option><option>0.75</option><option selected>1</option><option>1.25</option><option>1.5</option><option>2</option></select></label></div>
+    <h1 class="player-title">{{ media.name }}</h1>
+  </section>
+  <aside class="playlist"><h2>{{ item.title }}</h2>{% for sibling in siblings %}<a class="{{ 'active' if sibling.id == media.id }}" href="{{ url_for('media.play', file_id=sibling.id) }}"><span>▶</span>{{ sibling.name }}</a>{% endfor %}</aside>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='vendor/hls.min.js') }}"></script>{% endblock %}
