@@ -51,7 +51,9 @@ class Source(db.Model):
 
 
 class MediaObject(db.Model):
-    id: db.Mapped[str] = db.mapped_column(db.String(36), primary_key=True, default=lambda: str(uuid4()))
+    id: db.Mapped[str] = db.mapped_column(
+        db.String(36), primary_key=True, default=lambda: str(uuid4())
+    )
     source_id: db.Mapped[int] = db.mapped_column(db.ForeignKey("source.id"), index=True)
     media_type: db.Mapped[str] = db.mapped_column(db.String(16), index=True)
     relative_path: db.Mapped[str] = db.mapped_column(db.String(1024))
@@ -99,7 +101,9 @@ class MediaFile(db.Model):
 
 
 class Task(db.Model):
-    id: db.Mapped[str] = db.mapped_column(db.String(36), primary_key=True, default=lambda: str(uuid4()))
+    id: db.Mapped[str] = db.mapped_column(
+        db.String(36), primary_key=True, default=lambda: str(uuid4())
+    )
     kind: db.Mapped[str] = db.mapped_column(db.String(32))
     status: db.Mapped[str] = db.mapped_column(db.String(24), default="queued", index=True)
     progress: db.Mapped[int] = db.mapped_column(default=0)
@@ -108,9 +112,19 @@ class Task(db.Model):
     created_at: db.Mapped[datetime] = db.mapped_column(default=utcnow)
     updated_at: db.Mapped[datetime] = db.mapped_column(default=utcnow, onupdate=utcnow)
 
+    @property
+    def context(self) -> dict:
+        try:
+            value = json.loads(self.result_json or "{}")
+        except (TypeError, json.JSONDecodeError):
+            return {}
+        return value if isinstance(value, dict) else {}
+
 
 class UploadSession(db.Model):
-    id: db.Mapped[str] = db.mapped_column(db.String(36), primary_key=True, default=lambda: str(uuid4()))
+    id: db.Mapped[str] = db.mapped_column(
+        db.String(36), primary_key=True, default=lambda: str(uuid4())
+    )
     object_id: db.Mapped[str] = db.mapped_column(db.ForeignKey("media_object.id"), index=True)
     relative_path: db.Mapped[str] = db.mapped_column(db.String(1400))
     total_size: db.Mapped[int]

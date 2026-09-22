@@ -20,7 +20,11 @@ def _search_expression(query: str) -> str:
 
 @catalog_bp.get("/")
 def home():
-    counts = dict(db.session.query(MediaObject.media_type, db.func.count()).group_by(MediaObject.media_type).all())
+    counts = dict(
+        db.session.query(MediaObject.media_type, db.func.count())
+        .group_by(MediaObject.media_type)
+        .all()
+    )
     recent = MediaObject.query.order_by(MediaObject.updated_at.desc()).limit(8).all()
     return render_template("home.html", counts=counts, recent=recent)
 
@@ -46,11 +50,24 @@ def library(media_type: str):
     if source_id:
         query = query.filter_by(source_id=source_id)
     objects = query.order_by(MediaObject.title.collate("NOCASE")).all()
-    categories = [row[0] for row in db.session.query(MediaObject.category).filter_by(media_type=media_type).filter(MediaObject.category != "").distinct().order_by(MediaObject.category)]
+    categories = [
+        row[0]
+        for row in db.session.query(MediaObject.category)
+        .filter_by(media_type=media_type)
+        .filter(MediaObject.category != "")
+        .distinct()
+        .order_by(MediaObject.category)
+    ]
     sources = Source.query.filter_by(enabled=True).order_by(Source.name).all()
     return render_template(
-        "library.html", media_type=media_type, objects=objects, categories=categories,
-        sources=sources, query_text=query_text, selected_category=category, selected_source=source_id,
+        "library.html",
+        media_type=media_type,
+        objects=objects,
+        categories=categories,
+        sources=sources,
+        query_text=query_text,
+        selected_category=category,
+        selected_source=source_id,
     )
 
 
@@ -60,10 +77,9 @@ def content(object_id: str):
     grouped: dict[str, list] = defaultdict(list)
     root = PurePosixPath(item.relative_path)
     for media in sorted(item.files, key=lambda entry: natural_key(entry.relative_path)):
-        if media.kind == "subtitle":
+        if media.kind == "subtitle" or (item.media_type == "video" and media.kind != "video"):
             continue
         relative = PurePosixPath(media.relative_path).relative_to(root)
         folder = str(relative.parent) if str(relative.parent) != "." else "Основное"
         grouped[folder].append(media)
     return render_template("content.html", item=item, grouped=grouped)
-

@@ -26,7 +26,9 @@ def test_scan_creates_sidecar_and_indexes_files(app, tmp_path: Path):
         item = MediaObject.query.one()
         assert item.title == "Пространство"
         assert item.files[0].relative_path.endswith("Серия 01.mkv")
-        payload = json.loads((library / "video" / "Пространство" / ".mediahub.json").read_text("utf-8"))
+        payload = json.loads(
+            (library / "video" / "Пространство" / ".mediahub.json").read_text("utf-8")
+        )
         assert payload["id"] == item.id
         assert payload["type"] == "video"
 

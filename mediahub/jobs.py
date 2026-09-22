@@ -30,7 +30,9 @@ def _scan_worker(app, source_id: int, task_id: str) -> None:
             task.status = "done"
             task.progress = 100
             task.message = f"Найдено объектов: {count}"
-            task.result_json = json.dumps({"source_id": source_id, "objects": count})
+            task.result_json = json.dumps(
+                {**task.context, "source_id": source_id, "objects": count}, ensure_ascii=False
+            )
             db.session.commit()
         except Exception as exc:
             db.session.rollback()
@@ -48,10 +50,15 @@ def queue_scan(source: Source) -> Task | None:
         if source.id in _active_sources:
             return None
         _active_sources.add(source.id)
-    task = Task(kind="scan", message=f"Ожидает сканирования: {source.name}")
+    task = Task(
+        kind="scan",
+        message="Ожидает сканирования",
+        result_json=json.dumps(
+            {"subject": source.name, "source_id": source.id}, ensure_ascii=False
+        ),
+    )
     db.session.add(task)
     source.status = "queued"
     db.session.commit()
     _executor.submit(_scan_worker, current_app._get_current_object(), source.id, task.id)
     return task
-

@@ -9,14 +9,16 @@ from mediahub.models import Admin
 
 @pytest.fixture()
 def app(tmp_path: Path):
-    application = create_app({
-        "TESTING": True,
-        "WTF_CSRF_ENABLED": False,
-        "SECRET_KEY": "test-secret",
-        "SQLALCHEMY_DATABASE_URI": f"sqlite:///{tmp_path / 'test.db'}",
-        "CACHE_DIR": str(tmp_path / "cache"),
-        "UPLOAD_DIR": str(tmp_path / "uploads"),
-    })
+    application = create_app(
+        {
+            "TESTING": True,
+            "WTF_CSRF_ENABLED": False,
+            "SECRET_KEY": "test-secret",
+            "SQLALCHEMY_DATABASE_URI": f"sqlite:///{tmp_path / 'test.db'}",
+            "CACHE_DIR": str(tmp_path / "cache"),
+            "UPLOAD_DIR": str(tmp_path / "uploads"),
+        }
+    )
     with application.app_context():
         admin = Admin()
         admin.set_password("correct horse battery staple")
@@ -35,4 +37,3 @@ def admin_client(client):
     response = client.post("/login", data={"password": "correct horse battery staple"})
     assert response.status_code == 302
     return client
-

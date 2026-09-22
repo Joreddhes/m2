@@ -1,5 +1,61 @@
-{% extends "base.html" %}{% block title %}Управление — MediaHub{% endblock %}
-{% block content %}{% include "admin/_nav.html" %}<div class="page-heading"><div><p class="eyebrow">Администрирование</p><h1>Состояние системы</h1></div></div>
+{% extends "base.html" %}
+{% block title %}Управление — MediaHub{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='admin-tasks.css', v='1') }}">{% endblock %}
+{% block content %}
+{% include "admin/_nav.html" %}
+<div class="page-heading"><div><p class="eyebrow">Администрирование</p><h1>Состояние системы</h1></div></div>
 <div class="stat-grid"><div><strong>{{ source_count }}</strong><span>источников</span></div><div><strong>{{ object_count }}</strong><span>объектов</span></div><div><strong>{{ tasks|length }}</strong><span>последних задач</span></div></div>
-<section><h2>Последние задачи</h2><div class="table-wrap"><table><thead><tr><th>Тип</th><th>Состояние</th><th>Сообщение</th><th>Прогресс</th></tr></thead><tbody>{% for task in tasks %}<tr><td>{{ task.kind }}</td><td><span class="status {{ task.status }}">{{ task.status }}</span></td><td>{{ task.message }}</td><td>{{ task.progress }}%</td></tr>{% else %}<tr><td colspan="4">Задач пока нет</td></tr>{% endfor %}</tbody></table></div></section>
+
+<section aria-labelledby="task-log-heading">
+  <div class="section-title"><h2 id="task-log-heading">Последние задачи</h2><a class="button" href="{{ url_for('admin.dashboard') }}">Обновить</a></div>
+  {% set kind_labels = {'transcode': 'Транскодирование', 'scan': 'Сканирование'} %}
+  {% set status_labels = {'queued': 'В очереди', 'running': 'Выполняется', 'ready': 'Можно смотреть', 'done': 'Готово', 'error': 'Ошибка', 'cancelled': 'Отменено'} %}
+  <div class="task-log">
+    {% for task in tasks %}
+      {% set info = task.context %}
+      {% set lines = (task.message or '').splitlines() %}
+      {% set summary = (lines[-1] if task.status == 'error' else lines[0]) if lines else '' %}
+      <article class="task-entry {{ task.status }}">
+        <div class="task-entry-head">
+          <div class="task-identity">
+            <span class="task-kind">{{ kind_labels.get(task.kind, task.kind) }}</span>
+            {% if task.kind == 'transcode' and info.file_id %}
+              <a class="task-subject" href="{{ url_for('media.play', file_id=info.file_id) }}">{{ info.subject or 'Видео' }}</a>
+            {% elif task.kind == 'scan' and info.source_id %}
+              <strong class="task-subject">{{ info.subject or 'Источник №' ~ info.source_id }}</strong>
+            {% else %}
+              <strong class="task-subject">{{ info.subject or 'Объект не указан' }}</strong>
+            {% endif %}
+            {% if info.object_title %}<small>{{ info.object_title }}</small>{% endif %}
+          </div>
+          <span class="status {{ task.status }}">{{ status_labels.get(task.status, task.status) }}</span>
+        </div>
+        <div class="task-times">
+          <span>Создано <time class="task-time" datetime="{{ task.created_at.strftime('%Y-%m-%dT%H:%M:%SZ') }}">{{ task.created_at.strftime('%d.%m.%Y %H:%M:%S') }} UTC</time></span>
+          {% if task.updated_at and task.updated_at != task.created_at %}
+            <span>{{ 'Завершено' if task.status in ('done', 'error', 'cancelled') else 'Обновлено' }} <time class="task-time" datetime="{{ task.updated_at.strftime('%Y-%m-%dT%H:%M:%SZ') }}">{{ task.updated_at.strftime('%d.%m.%Y %H:%M:%S') }} UTC</time></span>
+          {% endif %}
+        </div>
+        <div class="task-entry-body">
+          <div class="task-message">
+            <p>{{ summary|truncate(160, true, '…') }}</p>
+            {% if (task.message or '')|length > 160 or lines|length > 1 %}
+              <details>
+                <summary>Полное сообщение</summary>
+                <pre>{{ task.message }}</pre>
+              </details>
+            {% endif %}
+          </div>
+          <div class="task-progress">
+            <div><span>Прогресс</span><strong>{{ task.progress }}%</strong></div>
+            <progress max="100" value="{{ task.progress }}" aria-label="Прогресс задачи"></progress>
+          </div>
+        </div>
+      </article>
+    {% else %}
+      <div class="empty">Задач пока нет</div>
+    {% endfor %}
+  </div>
+</section>
 {% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='admin-tasks.js', v='1') }}"></script>{% endblock %}

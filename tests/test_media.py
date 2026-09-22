@@ -7,8 +7,15 @@ from mediahub.models import MediaFile, MediaObject, Source
 def test_prepare_reports_missing_ffmpeg(app, client, tmp_path: Path):
     with app.app_context():
         source = Source(name="Local", kind="local", root=str(tmp_path))
-        item = MediaObject(source=source, media_type="video", relative_path="video/Test", title="Test")
-        media = MediaFile(media_object=item, relative_path="video/Test/episode.mkv", name="episode.mkv", kind="video")
+        item = MediaObject(
+            source=source, media_type="video", relative_path="video/Test", title="Test"
+        )
+        media = MediaFile(
+            media_object=item,
+            relative_path="video/Test/episode.mkv",
+            name="episode.mkv",
+            kind="video",
+        )
         db.session.add_all([source, item, media])
         db.session.commit()
         file_id = media.id

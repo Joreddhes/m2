@@ -44,11 +44,22 @@ def re_drive_prefix(value: str) -> bool:
 
 
 def safe_component(value: str) -> str:
-    value = "".join(character for character in value.strip() if ord(character) >= 32 and character not in '<>:"/\\|?*')
+    value = "".join(
+        character
+        for character in value.strip()
+        if ord(character) >= 32 and character not in '<>:"/\\|?*'
+    )
     value = value.rstrip(". ")
     if not value or value in {".", ".."}:
         raise ValueError("Недопустимое имя файла или папки")
-    if value.split(".", 1)[0].upper() in {"CON", "PRN", "AUX", "NUL", *(f"COM{i}" for i in range(1, 10)), *(f"LPT{i}" for i in range(1, 10))}:
+    if value.split(".", 1)[0].upper() in {
+        "CON",
+        "PRN",
+        "AUX",
+        "NUL",
+        *(f"COM{i}" for i in range(1, 10)),
+        *(f"LPT{i}" for i in range(1, 10)),
+    }:
         raise ValueError("Зарезервированное имя файла")
     return value
 
@@ -73,7 +84,9 @@ def _ftp_timestamp(value: str | None) -> float:
     if not value:
         return 0
     try:
-        return datetime.strptime(value[:14], "%Y%m%d%H%M%S").replace(tzinfo=timezone.utc).timestamp()
+        return (
+            datetime.strptime(value[:14], "%Y%m%d%H%M%S").replace(tzinfo=timezone.utc).timestamp()
+        )
     except ValueError:
         return 0
 
@@ -135,7 +148,9 @@ class LocalStorage(StorageBackend):
         for item in target.iterdir():
             stat = item.stat()
             child = f"{relative.strip('/')}/{item.name}".strip("/").replace("\\", "/")
-            result.append(StorageEntry(child, item.name, item.is_dir(), stat.st_size, stat.st_mtime))
+            result.append(
+                StorageEntry(child, item.name, item.is_dir(), stat.st_size, stat.st_mtime)
+            )
         return result
 
     def mkdir(self, relative: str) -> None:
@@ -175,7 +190,9 @@ class FTPStorage(StorageBackend):
         cls = ftplib.FTP_TLS if self.source.use_tls else ftplib.FTP
         ftp = cls()
         ftp.connect(self.source.host or "", self.source.port or 21, timeout=20)
-        ftp.login(self.source.username or "anonymous", decrypt_password(self.source.encrypted_password))
+        ftp.login(
+            self.source.username or "anonymous", decrypt_password(self.source.encrypted_password)
+        )
         if self.source.use_tls:
             ftp.prot_p()
         try:
@@ -206,7 +223,9 @@ class FTPStorage(StorageBackend):
                     child = f"{relative}/{name}".strip("/")
                     is_dir = facts.get("type") == "dir"
                     size = int(facts.get("size", 0)) if not is_dir else 0
-                    result.append(StorageEntry(child, name, is_dir, size, _ftp_timestamp(facts.get("modify"))))
+                    result.append(
+                        StorageEntry(child, name, is_dir, size, _ftp_timestamp(facts.get("modify")))
+                    )
             except ftplib.error_perm:
                 current = ftp.pwd()
                 for full_name in ftp.nlst(remote):
@@ -227,7 +246,9 @@ class FTPStorage(StorageBackend):
                             size = ftp.size(full_name) or 0
                         except ftplib.error_perm:
                             pass
-                    result.append(StorageEntry(f"{relative}/{name}".strip("/"), name, is_dir, size, 0))
+                    result.append(
+                        StorageEntry(f"{relative}/{name}".strip("/"), name, is_dir, size, 0)
+                    )
         return result
 
     def mkdir(self, relative: str) -> None:

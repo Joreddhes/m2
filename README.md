@@ -77,8 +77,18 @@ photo/
 
 ## Разработка и тесты
 
+На Windows 10/11 установите `uv` и синхронизируйте окружение по [uv.lock](uv.lock):
+
 ```powershell
-py -3 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -e ".[dev]"
-.\.venv\Scripts\pytest.exe
+winget install --id=astral-sh.uv -e
+uv sync --locked
+uv run --locked ruff check .
+uv run --locked ruff format --check .
+uv run --locked pytest
 ```
+
+`uv run --locked ruff format .` форматирует Python-код, а `uv add --dev <пакет>` добавляет инструмент разработки и обновляет lock-файл. Для проверки браузерной логики при установленном Node.js используйте `node --test tests/test_audio_preference.cjs`.
+
+`uv` официально поддерживает Windows начиная с 10. Запуск MediaHub на Windows 8.1 по-прежнему работает через `scripts/start-windows.ps1` и `pip`; `uv` для него не требуется.
+
+О текущем устройстве приложения и следующем шаге разделения модулей см. [docs/architecture.md](docs/architecture.md).

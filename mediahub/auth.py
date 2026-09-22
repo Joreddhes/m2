@@ -49,7 +49,11 @@ def login():
             session.pop("login_locked_until", None)
             login_user(admin, remember=True)
             next_url = request.args.get("next", "")
-            return redirect(next_url if next_url.startswith("/") and not next_url.startswith("//") else url_for("catalog.home"))
+            return redirect(
+                next_url
+                if next_url.startswith("/") and not next_url.startswith("//")
+                else url_for("catalog.home")
+            )
         else:
             attempts = int(session.get("login_attempts", 0)) + 1
             session["login_attempts"] = attempts

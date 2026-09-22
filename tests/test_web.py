@@ -46,9 +46,13 @@ def test_first_run_redirects_to_setup_and_creates_admin(app, client):
     response = client.get("/", follow_redirects=False)
     assert response.status_code == 302
     assert response.headers["Location"].endswith("/setup")
-    response = client.post("/setup", data={
-        "password": "a strong local password", "confirmation": "a strong local password",
-    })
+    response = client.post(
+        "/setup",
+        data={
+            "password": "a strong local password",
+            "confirmation": "a strong local password",
+        },
+    )
     assert response.status_code == 302
     with app.app_context():
         assert Admin.query.count() == 1
@@ -58,6 +62,7 @@ def test_admin_can_edit_metadata(app, admin_client, tmp_path):
     _library(app, tmp_path)
     with app.app_context():
         from mediahub.models import MediaObject
+
         object_id = MediaObject.query.one().id
     response = admin_client.post(
         f"/admin/content/{object_id}",
@@ -72,22 +77,31 @@ def test_resumable_unicode_upload(app, admin_client, tmp_path):
     _library(app, tmp_path)
     with app.app_context():
         from mediahub.models import MediaObject
+
         item = MediaObject.query.one()
         object_id = item.id
         root = Path(item.source.root)
     content = b"a video split into chunks"
-    response = admin_client.post("/admin/api/uploads", json={
-        "object_id": object_id, "destination": "Сезон 2", "name": "Серия 02.mkv", "size": len(content),
-    })
+    response = admin_client.post(
+        "/admin/api/uploads",
+        json={
+            "object_id": object_id,
+            "destination": "Сезон 2",
+            "name": "Серия 02.mkv",
+            "size": len(content),
+        },
+    )
     assert response.status_code == 201
     upload_id = response.json["id"]
     first = admin_client.patch(
-        f"/admin/api/uploads/{upload_id}", data=content[:7],
+        f"/admin/api/uploads/{upload_id}",
+        data=content[:7],
         headers={"Upload-Offset": "0", "Content-Type": "application/octet-stream"},
     )
     assert first.json == {"done": False, "offset": 7}
     second = admin_client.patch(
-        f"/admin/api/uploads/{upload_id}", data=content[7:],
+        f"/admin/api/uploads/{upload_id}",
+        data=content[7:],
         headers={"Upload-Offset": "7", "Content-Type": "application/octet-stream"},
     )
     assert second.json["done"] is True

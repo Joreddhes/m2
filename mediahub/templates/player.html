@@ -4,9 +4,14 @@
 <nav class="breadcrumbs"><a href="{{ url_for('catalog.library', media_type='video') }}">Видео</a><span>›</span><a href="{{ url_for('catalog.content', object_id=item.id) }}">{{ item.title }}</a><span>›</span>{{ media.name }}</nav>
 <div class="player-layout">
   <section>
-    <div class="video-shell" id="player-shell" data-file-id="{{ media.id }}">
+    <div class="video-shell" id="player-shell" data-file-id="{{ media.id }}" data-playback-id="{{ playback_id }}">
       <video id="video-player" controls playsinline preload="metadata"></video>
       <div id="prepare-state" class="prepare-state"><div class="spinner"></div><strong>Подготавливаем видео</strong><span>Запуск обработки…</span><progress max="100" value="0"></progress></div>
+    </div>
+    <div id="full-timeline" class="full-timeline" hidden>
+      <div class="timeline-times"><span id="timeline-current">0:00</span><span id="timeline-total">0:00</span></div>
+      <input id="timeline-seek" class="timeline-slider" type="range" min="0" max="1000" step="1" value="0" aria-label="Позиция в видео">
+      <small id="timeline-ready"></small>
     </div>
     <div class="player-toolbar"><label id="bitmap-control" hidden>Графические субтитры <select id="bitmap-track"></select></label><label id="audio-control" hidden>Аудио <select id="audio-track"></select></label><label>Скорость <select id="playback-rate"><option>0.5</option><option>0.75</option><option selected>1</option><option>1.25</option><option>1.5</option><option>2</option></select></label></div>
     <h1 class="player-title">{{ media.name }}</h1>

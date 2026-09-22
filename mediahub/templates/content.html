@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='video-grid.css', v='1') }}">{% endblock %}
 {% block title %}{{ item.title }} — MediaHub{% endblock %}
 {% block content %}
 <nav class="breadcrumbs"><a href="{{ url_for('catalog.library', media_type=item.media_type) }}">{{ 'Видео' if item.media_type == 'video' else 'Фото' }}</a><span>›</span>{{ item.title }}</nav>
@@ -10,8 +11,17 @@
 <section class="folder-section">
   <h2>{{ folder }}</h2>
   {% if item.media_type == 'video' %}
-    <div class="episode-list">
-    {% for file in files %}<a href="{{ url_for('media.play', file_id=file.id) }}"><span class="play-dot">▶</span><span><strong>{{ file.name }}</strong><small>{{ (file.size / 1048576)|round(1) }} МБ</small></span></a>{% endfor %}
+    <div class="video-grid">
+    {% for file in files %}
+      <a class="video-card" href="{{ url_for('media.play', file_id=file.id) }}" title="{{ file.name }}">
+        <span class="video-card-preview">
+          <span class="video-card-fallback" aria-hidden="true">▶</span>
+          <img data-video-thumbnail="{{ url_for('media.thumbnail', file_id=file.id) }}" alt="" hidden>
+          <span class="video-card-play" aria-hidden="true">▶</span>
+        </span>
+        <span class="video-card-details"><strong>{{ file.name }}</strong><small>{{ (file.size / 1048576)|round(1) }} МБ</small></span>
+      </a>
+    {% endfor %}
     </div>
   {% else %}
     <div class="photo-grid">
@@ -21,3 +31,4 @@
 </section>
 {% else %}<div class="empty"><h2>Объект пока пуст</h2></div>{% endfor %}
 {% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='video-thumbnails.js', v='1') }}"></script>{% endblock %}

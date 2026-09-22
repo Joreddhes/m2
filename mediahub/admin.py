@@ -1,14 +1,23 @@
 from __future__ import annotations
 
 from pathlib import Path, PurePosixPath
-
-from flask import Blueprint, current_app, flash, jsonify, redirect, render_template, request, url_for
-from flask_login import login_required
 from uuid import uuid4
 
+from flask import (
+    Blueprint,
+    current_app,
+    flash,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    url_for,
+)
+from flask_login import login_required
+
 from .extensions import db
-from .models import MediaObject, Source, Task, UploadSession
 from .jobs import queue_scan
+from .models import MediaObject, Source, Task, UploadSession
 from .scanner import scan_object, scan_source, update_sidecar
 from .storage import backend_for, encrypt_password, safe_component, safe_relative
 
@@ -22,7 +31,7 @@ def dashboard():
         "admin/dashboard.html",
         source_count=Source.query.count(),
         object_count=MediaObject.query.count(),
-        tasks=Task.query.order_by(Task.created_at.desc()).limit(10).all(),
+        tasks=Task.query.order_by(Task.created_at.desc()).limit(20).all(),
     )
 
 
@@ -37,7 +46,9 @@ def sources():
             flash("Заполните название, тип и корневой путь.", "danger")
         else:
             source = Source(
-                name=name, kind=kind, root=root,
+                name=name,
+                kind=kind,
+                root=root,
                 host=request.form.get("host", "").strip() or None,
                 port=request.form.get("port", type=int) or 21,
                 username=request.form.get("username", "").strip() or None,
@@ -68,7 +79,10 @@ def scan(source_id: int):
     source = db.get_or_404(Source, source_id)
     try:
         task = queue_scan(source)
-        flash("Сканирование поставлено в очередь." if task else "Этот источник уже сканируется.", "success")
+        flash(
+            "Сканирование поставлено в очередь." if task else "Этот источник уже сканируется.",
+            "success",
+        )
     except Exception as exc:
         flash(f"Ошибка сканирования: {exc}", "danger")
     return redirect(url_for("admin.sources"))
@@ -93,10 +107,14 @@ def new_content():
                     raise ValueError("Такая папка уже существует")
                 backend.mkdir(relative)
                 scan_source(source)
-                item = MediaObject.query.filter_by(source_id=source.id, relative_path=relative).one()
+                item = MediaObject.query.filter_by(
+                    source_id=source.id, relative_path=relative
+                ).one()
                 item.title = request.form.get("title", "").strip() or folder
                 item.category = request.form.get("category", "").strip()
-                item.tags = [tag.strip() for tag in request.form.get("tags", "").split(",") if tag.strip()]
+                item.tags = [
+                    tag.strip() for tag in request.form.get("tags", "").split(",") if tag.strip()
+                ]
                 update_sidecar(item)
                 flash("Объект создан. Теперь можно загрузить файлы.", "success")
                 return redirect(url_for("admin.edit_content", object_id=item.id))
@@ -147,11 +165,17 @@ def upload(object_id: str):
         uploaded = 0
         for incoming in request.files.getlist("files"):
             original = (incoming.filename or "").replace("\\", "/")
-            parts = [safe_component(part) for part in PurePosixPath(original).parts if part not in {"", ".", ".."}]
+            parts = [
+                safe_component(part)
+                for part in PurePosixPath(original).parts
+                if part not in {"", ".", ".."}
+            ]
             if not parts or any(not part for part in parts):
                 continue
             relative_name = "/".join(parts)
-            target = "/".join(part for part in (item.relative_path, destination, relative_name) if part)
+            target = "/".join(
+                part for part in (item.relative_path, destination, relative_name) if part
+            )
             target = safe_relative(target)
             if backend.exists(target):
                 raise ValueError(f"Файл уже существует: {relative_name}")
@@ -176,20 +200,30 @@ def create_upload():
         destination = payload.get("destination", "").strip()
         destination = safe_relative(destination) if destination else ""
         raw_name = str(payload.get("name", "")).replace("\\", "/")
-        parts = [safe_component(part) for part in PurePosixPath(raw_name).parts if part not in {"", ".", ".."}]
+        parts = [
+            safe_component(part)
+            for part in PurePosixPath(raw_name).parts
+            if part not in {"", ".", ".."}
+        ]
         if not parts:
             raise ValueError("Имя файла отсутствует")
-        target = safe_relative("/".join(part for part in (item.relative_path, destination, "/".join(parts)) if part))
+        target = safe_relative(
+            "/".join(part for part in (item.relative_path, destination, "/".join(parts)) if part)
+        )
         total = int(payload.get("size", 0))
         if total <= 0 or total > current_app.config["MAX_FILE_SIZE"]:
             raise ValueError("Недопустимый размер файла")
         if backend_for(item.source).exists(target):
             return jsonify(error="Файл уже существует"), 409
-        existing = UploadSession.query.filter_by(object_id=item.id, relative_path=target, total_size=total).first()
+        existing = UploadSession.query.filter_by(
+            object_id=item.id, relative_path=target, total_size=total
+        ).first()
         if existing:
             return jsonify(id=existing.id, offset=existing.offset)
         upload = UploadSession(
-            object_id=item.id, relative_path=target, total_size=total,
+            object_id=item.id,
+            relative_path=target,
+            total_size=total,
             temp_name=f"{uuid4()}.part",
         )
         db.session.add(upload)

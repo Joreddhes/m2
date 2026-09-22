@@ -13,7 +13,18 @@ from .storage import StorageBackend, backend_for
 SIDECAR = ".mediahub.json"
 LOOSE_SIDECAR = ".mediahub.loose.json"
 VIDEO_EXTENSIONS = {".mp4", ".m4v", ".mkv", ".avi", ".mov", ".webm", ".mpeg", ".mpg", ".ts", ".mts"}
-IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".tif", ".tiff", ".heic", ".heif"}
+IMAGE_EXTENSIONS = {
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".gif",
+    ".webp",
+    ".bmp",
+    ".tif",
+    ".tiff",
+    ".heic",
+    ".heif",
+}
 SUBTITLE_EXTENSIONS = {".srt", ".ass", ".ssa", ".vtt"}
 
 
@@ -54,7 +65,9 @@ def _load_or_create_sidecar(
         except (UnicodeError, json.JSONDecodeError, OSError):
             pass
     data = _sidecar_payload(media_type, title)
-    backend.write_bytes(sidecar_path, json.dumps(data, ensure_ascii=False, indent=2).encode("utf-8"))
+    backend.write_bytes(
+        sidecar_path, json.dumps(data, ensure_ascii=False, indent=2).encode("utf-8")
+    )
     return data
 
 
@@ -69,7 +82,12 @@ def _sidecar_path(root: str, media_type: str, loose: bool) -> str:
 
 
 def _upsert_object(
-    source: Source, backend: StorageBackend, media_type: str, root: str, title: str, loose: bool,
+    source: Source,
+    backend: StorageBackend,
+    media_type: str,
+    root: str,
+    title: str,
+    loose: bool,
     force_new_id: bool = False,
 ) -> MediaObject:
     sidecar = _sidecar_path(root, media_type, loose)
@@ -81,7 +99,9 @@ def _upsert_object(
         backend.write_bytes(sidecar, json.dumps(data, ensure_ascii=False, indent=2).encode("utf-8"))
         item = None
     if item is None:
-        item = MediaObject(id=object_id, source_id=source.id, media_type=media_type, relative_path=root)
+        item = MediaObject(
+            id=object_id, source_id=source.id, media_type=media_type, relative_path=root
+        )
         db.session.add(item)
     item.title = str(data.get("title") or title)
     item.category = str(data.get("category") or "")
@@ -95,11 +115,13 @@ def _upsert_object(
 def _index_files(item: MediaObject, backend: StorageBackend, loose_only: bool = False) -> None:
     known = {media.relative_path: media for media in item.files}
     seen: set[str] = set()
-    entries = backend.list(item.relative_path) if loose_only else backend.walk_files(item.relative_path)
+    entries = (
+        backend.list(item.relative_path) if loose_only else backend.walk_files(item.relative_path)
+    )
     for entry in entries:
         if entry.is_dir or entry.name.startswith(".mediahub"):
             continue
-        if loose_only and "/" in entry.path[len(item.relative_path):].strip("/"):
+        if loose_only and "/" in entry.path[len(item.relative_path) :].strip("/"):
             continue
         kind = classify(entry.name)
         allowed = {"video", "subtitle"} if item.media_type == "video" else {"image"}
@@ -122,8 +144,15 @@ def _index_files(item: MediaObject, backend: StorageBackend, loose_only: bool = 
 def _refresh_search(item: MediaObject) -> None:
     db.session.execute(db.text("DELETE FROM media_search WHERE object_id = :id"), {"id": item.id})
     db.session.execute(
-        db.text("INSERT INTO media_search(object_id, title, category, tags) VALUES (:id, :title, :category, :tags)"),
-        {"id": item.id, "title": item.title, "category": item.category, "tags": " ".join(item.tags)},
+        db.text(
+            "INSERT INTO media_search(object_id, title, category, tags) VALUES (:id, :title, :category, :tags)"
+        ),
+        {
+            "id": item.id,
+            "title": item.title,
+            "category": item.category,
+            "tags": " ".join(item.tags),
+        },
     )
 
 
@@ -148,9 +177,13 @@ def scan_source(source: Source) -> int:
             entries = sorted(backend.list(media_type), key=lambda entry: natural_key(entry.name))
             loose_files = [entry for entry in entries if not entry.is_dir and classify(entry.name)]
             if loose_files:
-                item = _upsert_object(source, backend, media_type, media_type, "Без категории", True)
+                item = _upsert_object(
+                    source, backend, media_type, media_type, "Без категории", True
+                )
                 if item.id in found:
-                    item = _upsert_object(source, backend, media_type, media_type, "Без категории", True, True)
+                    item = _upsert_object(
+                        source, backend, media_type, media_type, "Без категории", True, True
+                    )
                 db.session.flush()
                 _index_files(item, backend, loose_only=True)
                 _refresh_search(item)
@@ -161,7 +194,9 @@ def scan_source(source: Source) -> int:
                     continue
                 item = _upsert_object(source, backend, media_type, entry.path, entry.name, False)
                 if item.id in found:
-                    item = _upsert_object(source, backend, media_type, entry.path, entry.name, False, True)
+                    item = _upsert_object(
+                        source, backend, media_type, entry.path, entry.name, False, True
+                    )
                 db.session.flush()
                 _index_files(item, backend)
                 _refresh_search(item)
@@ -190,15 +225,25 @@ def scan_source(source: Source) -> int:
                 continue
             item = _upsert_object(source, backend, detected_type, entry.path, entry.name, False)
             if item.id in found:
-                item = _upsert_object(source, backend, detected_type, entry.path, entry.name, False, True)
+                item = _upsert_object(
+                    source, backend, detected_type, entry.path, entry.name, False, True
+                )
             db.session.flush()
             _index_files(item, backend)
             _refresh_search(item)
             found.add(item.id)
             count += 1
-        stale = MediaObject.query.filter_by(source_id=source.id).filter(~MediaObject.id.in_(found)).all() if found else MediaObject.query.filter_by(source_id=source.id).all()
+        stale = (
+            MediaObject.query.filter_by(source_id=source.id)
+            .filter(~MediaObject.id.in_(found))
+            .all()
+            if found
+            else MediaObject.query.filter_by(source_id=source.id).all()
+        )
         for item in stale:
-            db.session.execute(db.text("DELETE FROM media_search WHERE object_id = :id"), {"id": item.id})
+            db.session.execute(
+                db.text("DELETE FROM media_search WHERE object_id = :id"), {"id": item.id}
+            )
             db.session.delete(item)
         source.status = "ready"
         source.last_error = None

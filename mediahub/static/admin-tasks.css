@@ -1,0 +1,97 @@
+.task-log {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.task-entry {
+  min-width: 0;
+  padding: 15px 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+}
+
+.task-entry.error { border-left: 3px solid var(--danger); }
+
+.task-entry-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.task-identity {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.task-kind,
+.task-identity small,
+.task-times,
+.task-progress span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.task-subject {
+  overflow-wrap: anywhere;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+a.task-subject:hover { color: var(--accent); }
+.task-entry-head .status { flex: none; }
+
+.task-times {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-top: 8px;
+}
+
+.task-times time { color: #cbd5e1; }
+
+.task-entry-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 170px;
+  align-items: start;
+  gap: 16px;
+  margin-top: 12px;
+  padding-top: 11px;
+  border-top: 1px solid var(--line);
+}
+
+.task-message { min-width: 0; }
+.task-message p { margin: 0; overflow-wrap: anywhere; }
+.task-entry.error .task-message p { color: #fda4af; }
+
+.task-message details { margin-top: 7px; }
+.task-message summary { width: fit-content; color: var(--accent2); cursor: pointer; font-size: 13px; }
+.task-message summary:hover { text-decoration: underline; }
+
+.task-message pre {
+  max-height: 280px;
+  margin: 9px 0 0;
+  overflow: auto;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #101720;
+  color: var(--text);
+  font: 12px/1.5 ui-monospace, Consolas, monospace;
+}
+
+.task-progress { min-width: 0; }
+.task-progress div { display: flex; justify-content: space-between; gap: 8px; }
+.task-progress strong { font-variant-numeric: tabular-nums; }
+.task-progress progress { width: 100%; height: 10px; accent-color: var(--accent); }
+.task-entry.error .task-progress progress { accent-color: var(--danger); }
+
+@media (max-width: 620px) {
+  .task-entry-body { grid-template-columns: 1fr; gap: 10px; }
+  .task-progress { grid-row: 1; }
+}
